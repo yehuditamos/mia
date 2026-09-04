@@ -1,0 +1,59 @@
+name: Publish selected apartment assets
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-site-assets.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils python3-bs4 python3-requests
+      - name: Render selected assets
+        run: |
+          cat > /tmp/publish.py <<'PY'
+          import os,re,subprocess,requests
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+          PAGE='https://www.yigal-group.com/%D7%AA%D7%A9%D7%A8%D7%99%D7%98%D7%99-%D7%93%D7%99%D7%A8%D7%94-%D7%94%D7%92%D7%A8%D7%9C%D7%94-2092'
+          OVERVIEW='https://www.yigal-group.com/_files/ugd/d42bfc_47644bb277c8494b8cf9686380453281.pdf'
+          selected={('E47',8),('E47',5),('E39',8),('E51',5),('E50',5),('E46',5),('E44',5),('E42',5),('E47',7),('E50',8),('E46',8),('E44',8),('E47',6),('E39',7),('E39',5),('E39',6),('E48',5),('E51',8)}
+          out='site-assets'; os.makedirs(out,exist_ok=True)
+          s=requests.Session();s.headers['User-Agent']='Mozilla/5.0'
+          def get(u,p):
+            r=s.get(u,timeout=90);r.raise_for_status();open(p,'wb').write(r.content)
+          get(OVERVIEW,'/tmp/overview.pdf')
+          subprocess.run(['pdftoppm','-f','1','-singlefile','-jpeg','-jpegopt','quality=80','-scale-to','1500','/tmp/overview.pdf',f'{out}/overview'],check=True)
+          soup=BeautifulSoup(s.get(PAGE,timeout=90).text,'html.parser')
+          current=None; found={}
+          for tag in soup.find_all(['h1','h2','h3','h4','h5','h6','a']):
+            txt=' '.join(tag.get_text(' ',strip=True).split())
+            m=re.search(r'בניין\s*(E\d+)',txt)
+            if m: current=m.group(1)
+            if tag.name=='a' and current:
+              href=tag.get('href','')
+              am=re.search(r'(\d+)\s*דירה|דירה\s*(\d+)',txt)
+              if '.pdf' in href and am:
+                apt=int(am.group(1) or am.group(2)); k=(current,apt)
+                if k in selected and k not in found: found[k]=urljoin(PAGE,href)
+          print('found',len(found),sorted(found))
+          for (b,a),u in sorted(found.items()):
+            pdf=f'/tmp/{b}_{a}.pdf';get(u,pdf)
+            for page,label in [(3,'site'),(5,'plan')]:
+              pref=f'{out}/{b}_apt{a}_{label}'
+              subprocess.run(['pdftoppm','-f',str(page),'-l',str(page),'-singlefile','-jpeg','-jpegopt','quality=78','-scale-to','900',pdf,pref],check=True)
+          missing=selected-set(found)
+          if missing: raise RuntimeError('missing '+repr(sorted(missing)))
+          PY
+          python3 /tmp/publish.py
+      - name: Commit assets
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add site-assets
+          git commit -m 'Publish selected apartment images [skip ci]' || exit 0
+          git pull --rebase origin main
+          git push origin main
