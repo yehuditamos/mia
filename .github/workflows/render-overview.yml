@@ -16,10 +16,15 @@ jobs:
           mkdir -p quick
           curl -L --fail 'https://www.yigal-group.com/_files/ugd/d42bfc_47644bb277c8494b8cf9686380453281.pdf' -o /tmp/overview.pdf
           pdftoppm -f 1 -singlefile -png -scale-to 2400 /tmp/overview.pdf quick/overview
+      - name: Upload overview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-overview
+          path: quick/overview.png
       - name: Commit
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add quick/overview.png
-          git commit -m 'Add high resolution official overview [skip ci]'
+          git commit -m 'Add high resolution official overview [skip ci]' || exit 0
           git push
