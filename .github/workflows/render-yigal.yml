@@ -1,0 +1,94 @@
+name: Render official lottery 2092 plans
+
+on:
+  push:
+    paths:
+      - '.github/workflows/render-yigal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils imagemagick python3-bs4 python3-requests
+      - name: Download and render official public PDFs
+        run: |
+          cat > /tmp/render.py <<'PY'
+          import json, os, re, subprocess, requests
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+
+          PAGE='https://www.yigal-group.com/%D7%AA%D7%A9%D7%A8%D7%99%D7%98%D7%99-%D7%93%D7%99%D7%A8%D7%94-%D7%94%D7%92%D7%A8%D7%9C%D7%94-2092'
+          OVERVIEW='https://www.yigal-group.com/_files/ugd/d42bfc_47644bb277c8494b8cf9686380453281.pdf'
+          OUT='renders'
+          os.makedirs(OUT, exist_ok=True)
+          ses=requests.Session(); ses.headers['User-Agent']='Mozilla/5.0'
+
+          def get(url, path):
+              r=ses.get(url, timeout=90); r.raise_for_status(); open(path,'wb').write(r.content)
+
+          get(OVERVIEW,'/tmp/overview.pdf')
+          subprocess.run(['pdftoppm','-f','1','-singlefile','-jpeg','-jpegopt','quality=88','-scale-to','1800','/tmp/overview.pdf',f'{OUT}/overview'],check=True)
+
+          html=ses.get(PAGE,timeout=90).text
+          soup=BeautifulSoup(html,'html.parser')
+          # The public Wix page places the links in building order. Use heading order + link order.
+          ordered=[]; current=None
+          for tag in soup.find_all(['h1','h2','h3','h4','h5','h6','a']):
+              txt=' '.join(tag.get_text(' ',strip=True).split())
+              m=re.search(r'בניין\s*(E\d+)',txt)
+              if m: current=m.group(1)
+              if tag.name=='a':
+                  href=tag.get('href','')
+                  if current and '.pdf' in href:
+                      am=re.search(r'(\d+)\s*דירה|דירה\s*(\d+)',txt)
+                      if am:
+                          apt=int(am.group(1) or am.group(2))
+                          ordered.append({'building':current,'apt':apt,'url':urljoin(PAGE,href)})
+          # De-duplicate while preserving order
+          seen=set(); plans=[]
+          for x in ordered:
+              k=(x['building'],x['apt'])
+              if k not in seen:
+                  seen.add(k); plans.append(x)
+          print('plans',len(plans),plans[:10])
+
+          for i,x in enumerate(plans,1):
+              stem=f"{x['building']}_apt{x['apt']}"
+              pdf=f'/tmp/{stem}.pdf'; tmp=f'/tmp/{stem}'
+              try:
+                  get(x['url'],pdf)
+                  subprocess.run(['pdftoppm','-jpeg','-jpegopt','quality=80','-scale-to','850',pdf,tmp],check=True,stdout=subprocess.DEVNULL)
+                  files=sorted([f for f in os.listdir('/tmp') if f.startswith(stem+'-') and f.endswith('.jpg')])
+                  if files:
+                      # montage is a compact visual overview of all PDF pages
+                      cmd=['montage']+[f'/tmp/{f}' for f in files]+['-tile','2x','-geometry','600x420+8+8','-background','white',f'{OUT}/{stem}_contact.jpg']
+                      subprocess.run(cmd,check=True)
+                      # Copy last page separately; in these plan PDFs it usually contains the detailed apartment sheet.
+                      open(f'{OUT}/{stem}_last.jpg','wb').write(open('/tmp/'+files[-1],'rb').read())
+                  x['contact']=f'{stem}_contact.jpg'; x['last']=f'{stem}_last.jpg'
+              except Exception as e:
+                  x['error']=repr(e)
+              finally:
+                  for f in list(os.listdir('/tmp')):
+                      if f.startswith(stem):
+                          try: os.remove('/tmp/'+f)
+                          except: pass
+              print(i,'/',len(plans),stem,x.get('error','ok'))
+          open(f'{OUT}/index.json','w',encoding='utf-8').write(json.dumps(plans,ensure_ascii=False,indent=2))
+          PY
+          python3 /tmp/render.py
+      - name: Commit rendered previews
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add renders
+          git commit -m 'Render official apartment plan previews [skip ci]' || exit 0
+          git push
