@@ -1,0 +1,41 @@
+name: Upgrade apartment hero resolution
+
+on:
+  push:
+    paths:
+      - '.github/workflows/upgrade-heroes.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch higher-resolution Canva renders
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, requests
+          src=pathlib.Path('.github/workflows/capture-heroes.yml').read_text()
+          urls=re.findall(r"https://media\.canva\.com[^']+",src)
+          print('found',len(urls),'urls')
+          out=pathlib.Path('dashboard/heroes'); out.mkdir(parents=True,exist_ok=True)
+          s=requests.Session(); s.headers['User-Agent']='Mozilla/5.0'
+          for i,u in enumerate(urls,1):
+              hi=u.replace('/height:150/','/height:900/').replace('/width:200','/width:1200').replace('x-canva-quality=thumbnail','x-canva-quality=screen')
+              r=s.get(hi,timeout=60)
+              print(i,r.status_code,len(r.content),r.headers.get('content-type'))
+              if r.ok and len(r.content)>100000:
+                  (out/f'rank{i:02d}.png').write_bytes(r.content)
+              else:
+                  print('keeping existing rank',i)
+          PY
+      - name: Commit upgraded heroes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add dashboard/heroes
+          git commit -m 'Upgrade apartment hero resolution [skip ci]' || exit 0
+          git push
