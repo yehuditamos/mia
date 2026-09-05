@@ -1,0 +1,53 @@
+name: Capture apartment hero renders
+
+on:
+  push:
+    paths:
+      - '.github/workflows/capture-heroes.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download generated hero renders
+        run: |
+          mkdir -p dashboard/heroes
+          python3 - <<'PY'
+          import requests
+          urls = {
+          1:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F4313a034-8c4c-4b11-bb51-d1883426c2d1/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAGc0LAB3JrjlCyBrbpi4SLLRh9RvBCDGdmfaHWD8sn-F&exp=1788588876&osig=AAAAAAAAAAAAAAAAAAAAAKUZshxJP_2vqzN8qG2RtCQ1lKiVRVvKcyPmy-Tgd05Z&signer=media-rpc&x-canva-quality=thumbnail',
+          2:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F3a385f99-3e17-4592-aa42-c07f9f2fd040/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAOG7BVM5-2ls5ZIGQhMlM8wPgQWEhbEN4o6CLrGRD2yo&exp=1788589034&osig=AAAAAAAAAAAAAAAAAAAAAJhElCuOzz8j2xHaYiAnuP7yOKCfnKYOGsdDbE6qZDDl&signer=media-rpc&x-canva-quality=thumbnail',
+          3:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fe4aabd54-342d-4b68-9237-0521e95b3f9b/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAPTd9phw7kgq-EsPvMVmnKfEbZXIFKcc-_8eG4bva8uz&exp=1788586603&osig=AAAAAAAAAAAAAAAAAAAAABDX7C5vETGrw-NR48Do5I2S9cidWvrVP9FH3ccIx_Bi&signer=media-rpc&x-canva-quality=thumbnail',
+          4:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F715d13ab-34a5-42c5-bbdc-faacb8bbb69f/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAPHKBlY60-GmTDJ0Cz23KDQdcUWZUo-QcozmgQ5TaV13&exp=1788589368&osig=AAAAAAAAAAAAAAAAAAAAAPsaVURCBFPMSuIDvDlZHNvXBNzPJ2_wgGWZR8y6N7Hy&signer=media-rpc&x-canva-quality=thumbnail',
+          5:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F7774f005-bc5a-450a-93c1-8c68ae7dbb63/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAACHkKlQ--nkfYviUDrbboNHvkz5tYbsYPZZUDav21Pt4&exp=1788588693&osig=AAAAAAAAAAAAAAAAAAAAAG9nImfZVVAGpmNWAl_b0BTvvqTUGZ6m9UFjN1pfmWZs&signer=media-rpc&x-canva-quality=thumbnail',
+          6:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F94464007-75f0-436a-bd87-efafb57a77f7/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAHo_M0yW5-WkL6GZXf-1GWmQhS1Pu2IqyCT0Cyk_iPWR&exp=1788586916&osig=AAAAAAAAAAAAAAAAAAAAAG1R3YgJblBTMR6nhONuPqUjDLnxv-yBQ1Yce4sa55v7&signer=media-rpc&x-canva-quality=thumbnail',
+          7:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F9c712a80-276f-4580-ab5f-864158dba74a/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAGXQjkQ3mPjkSOcfaGAEMAG1zDcQYqAyAIp1XeFGPdn4&exp=1788588811&osig=AAAAAAAAAAAAAAAAAAAAAJZw9Mm5pnE94efTzghg-pr2_Y_yAh12ZiFEEnpviv1p&signer=media-rpc&x-canva-quality=thumbnail',
+          8:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fe7a9f8af-9704-4ec4-ad85-7a4671623735/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAG9zMu_NwdjBbVtxP1uhLDTwD8IAHLBIYfshMejQ8fc5&exp=1788587208&osig=AAAAAAAAAAAAAAAAAAAAAIpR9Bz76qo3rxZ1NeyzwMYbHOy5MjvPpIsuiy2yOQof&signer=media-rpc&x-canva-quality=thumbnail',
+          9:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fe0f81a72-be87-41d2-aca6-9578157c02a8/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAD57v-VwFKCCMI03l-n_EOpJctpX-bZ9Qm9VkzPrLfsi&exp=1788586528&osig=AAAAAAAAAAAAAAAAAAAAAFHd844LkfPdVGVXjOJ5kQLdy87iQjAkUh4uAJYM3ouy&signer=media-rpc&x-canva-quality=thumbnail',
+          10:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fb6fda32a-d40b-446a-809a-e77a210e2086/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAADurrQOd30KtImIQT5Aa9qWW092bmk8TP9E6sjLWyGMT&exp=1788589850&osig=AAAAAAAAAAAAAAAAAAAAAMoivXe88TMR93lQKJvNr_fK2NMyhYKxHLpEu-qmLWZr&signer=media-rpc&x-canva-quality=thumbnail',
+          11:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F5d941a5c-3426-4cac-96cd-edc09c49834d/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAH4dMjkKDNjhWuXC9UJZtfNfKg4fZLw8rlfjUFF5WBsy&exp=1788588245&osig=AAAAAAAAAAAAAAAAAAAAALiW0ByOl5MgV5lHfxMbtI2j2ZhzXCQvnbdw80mihtV2&signer=media-rpc&x-canva-quality=thumbnail',
+          12:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fd5be55dd-323d-4a42-994d-69e7f5bd2709/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAH1FEHMVI8xcZ9_wSe3iSuSzXF5Dq1pyQp64Z2p2e4jx&exp=1788589363&osig=AAAAAAAAAAAAAAAAAAAAAMF3hCMQfdG5xItqhahZGoIEVgj81XknQegvihx_B28V&signer=media-rpc&x-canva-quality=thumbnail',
+          13:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fb449aefa-0e40-4f7a-987a-4485bc5cfb70/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAOo1tKQ-cNNkBB8xsILbE5hFzO7r0QP5J1ySZbLfB7Wx&exp=1788587362&osig=AAAAAAAAAAAAAAAAAAAAANaNMkWUDTDSDfdwrqIsdlc9zFTFeE83t-M9IMh7Pw26&signer=media-rpc&x-canva-quality=thumbnail',
+          14:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F8a763be1-e6ea-4fc7-84e3-439251d48500/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAIFsfr9uNsz1w_4R0VbyiEZA7pYeAVt4tQRGFbAjko9n&exp=1788588206&osig=AAAAAAAAAAAAAAAAAAAAAILRNaQdtHGs0LjZ3TmnnKj118346tprsMlVVjF7dhU5&signer=media-rpc&x-canva-quality=thumbnail',
+          15:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F8d5d7bc5-719a-4308-8bbe-2559b04ade16/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAABY3IuyFAQ7GQO744Ic54Ru9nAqmd1NNdiVonUcodEik&exp=1788588704&osig=AAAAAAAAAAAAAAAAAAAAAHTaZsGnPHYI_6zYVRi-tH03I0zgHa0exjfoUiPvQDtj&signer=media-rpc&x-canva-quality=thumbnail',
+          16:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F458c7ef8-5ca6-40b2-9a4b-6173d617c24a/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAHZAvVpnw8HQGF7Ftk1qkNA62Kpr66qfjzfqpyMBtvQ1&exp=1788587949&osig=AAAAAAAAAAAAAAAAAAAAAP4VX1sOZ8cb_0aGnQ3hh-vmhwgIDTZPDrPPBZx-P7hy&signer=media-rpc&x-canva-quality=thumbnail',
+          17:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2Fa0c39ba7-d301-4879-81ec-31284b361177/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAEHCtdP_-cFlS5zZrNeX-E-gdnZoOocvAV31tHyU53yj&exp=1788587703&osig=AAAAAAAAAAAAAAAAAAAAAMZZIMQOJcJoPdKKPV0fO22xfIkWWSB9vOj70P_H0pMs&signer=media-rpc&x-canva-quality=thumbnail',
+          18:'https://media.canva.com/v2/image-resize/format:PNG/height:150/quality:100/uri:ifs%3A%2F%2FM%2F9af4bfdb-498c-4de9-a91b-982fd1a0da63/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAOm7FujB-gDXnWhJNSWJcbH5hJSaZfl6zFfPr9n5Yu1M&exp=1788588721&osig=AAAAAAAAAAAAAAAAAAAAAALDRvoLAT1ox0WTDUbjNkLZQA8OYkhx7HZ8r2NTRMvD&signer=media-rpc&x-canva-quality=thumbnail'
+          }
+          s=requests.Session(); s.headers['User-Agent']='Mozilla/5.0'
+          for i,u in urls.items():
+              r=s.get(u,timeout=60); r.raise_for_status()
+              p=f'dashboard/heroes/rank{i:02d}.png'; open(p,'wb').write(r.content)
+              print(i,len(r.content))
+          PY
+      - name: Commit hero renders
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add dashboard/heroes
+          git commit -m 'Add apartment hero renders [skip ci]' || exit 0
+          git push
