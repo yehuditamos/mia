@@ -1,1 +1,158 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>מול ירדן · סדר בחירה</title><link rel="stylesheet" href="style.css"></head><body><header><div class="w"><div>מול ירדן · הגרלה 2092 · סדר בחירה חדש</div><h1>20 הדירות הרלוונטיות</h1><div class="lead"><b>E39 בעדיפות עליונה.</b> ארבע הפותחות: דירות 3–4 ב־E39 ואז 3–4 ב־E47. אחריהן דירות 5–8 ב־E39, אחר כך 5–8 ב־E47, ולבסוף דירות 7–8 הדרומיות ב־E42, E50, E51 ו־E44. סימון “נתפסה” מוריד אוטומטית לתחתית וצובע באפור.</div></div></header><div class="bar"><div class="barin"><b>הטובה ביותר שנותרה: <span id="best"></span></b><button class="reset" onclick="resetTaken()">איפוס</button></div></div><main class="grid" id="grid"></main><dialog id="dlg"><div class="mh"><div class="mt"><div><small id="mr"></small><h2 id="mtitle" style="margin:4px 0"></h2><div class="price" id="mp"></div></div><button class="close" onclick="dlg.close()">×</button></div></div><div class="mc" id="mc"></div></dialog><script src="data.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="סדר הבחירה המעודכן לדירות בפרויקט מול ירדן, עם הדמיות וכיווני אוויר">
+  <title>מול ירדן · סדר בחירה</title>
+  <style>
+    :root{--ink:#18302b;--green:#1f584b;--cream:#f7f3ec;--paper:#fff;--red:#a43b2e;--muted:#68736f;--line:#e4ddd3}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,"Noto Sans Hebrew",sans-serif;background:var(--cream);color:var(--ink)}
+    header{background:#214f43;color:#fff;padding:28px 16px}
+    .w{max-width:1120px;margin:auto}
+    h1{margin:4px 0 10px;font-size:clamp(34px,7vw,62px)}
+    .lead{max-width:940px;line-height:1.55;font-size:16px}
+    .bar{position:sticky;top:0;z-index:20;background:#f7f3eced;border-bottom:1px solid #ddd4c8;padding:10px 16px;backdrop-filter:blur(10px)}
+    .barin{max-width:1120px;margin:auto;display:flex;justify-content:space-between;gap:10px}
+    .reset{border:0;background:#e7ece9;color:#214f43;border-radius:999px;padding:9px 12px;font-weight:700;cursor:pointer}
+    .grid{max-width:1120px;margin:auto;padding:20px 14px 50px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}
+    .card{background:var(--paper);border-radius:20px;overflow:hidden;box-shadow:0 7px 24px #0001;text-align:right;color:inherit;position:relative;transition:transform .18s,box-shadow .18s}
+    .card:hover{transform:translateY(-2px);box-shadow:0 11px 30px #0002}
+    .cardMain{display:block;width:100%;border:0;padding:0;background:transparent;color:inherit;text-align:right;cursor:pointer;font:inherit}
+    .card.taken{background:#cfcfcf;filter:grayscale(1);opacity:.58}
+    .card.taken::after{content:"נתפסה";position:absolute;top:10px;left:10px;background:#666;color:#fff;padding:7px 10px;border-radius:999px;font-weight:800;z-index:9}
+    .sep{grid-column:1/-1;margin:18px 0 0;padding-top:18px;border-top:2px dashed #b8b1a7;font-weight:900;color:#666;font-size:20px}
+    .cover,.heroFrame{position:relative;overflow:hidden;background:#d8dfdc;aspect-ratio:16/9}
+    .cover img,.heroFrame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;image-rendering:auto}
+    .heroFrame{width:100%;border-radius:14px}
+    .rank{position:absolute;top:10px;right:10px;background:#fff;color:var(--green);padding:7px 10px;border-radius:999px;font-weight:900;z-index:7;box-shadow:0 3px 12px #0003}
+    .pri{position:absolute;right:10px;top:52px;background:#fffffff2;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:800;max-width:52%;z-index:7;box-shadow:0 3px 12px #0002}
+    .airflow{position:absolute;inset:0;z-index:4;pointer-events:none}
+    .airflow svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+    .windline{fill:none;stroke:#66d8ff;stroke-width:9;stroke-linecap:round;filter:drop-shadow(0 0 7px #007abf);opacity:.96}
+    .airPill{position:absolute;bottom:6%;display:flex;align-items:center;gap:5px;border-radius:999px;padding:6px 9px;font-size:clamp(10px,2.6vw,13px);font-weight:900;line-height:1;box-shadow:0 4px 15px #0005;white-space:nowrap}
+    .airPill::before{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:14px;font-weight:900}
+    .airCount{left:4%;background:#0f4b67;color:#fff;border:1px solid #9eeaff}
+    .airCount::before{content:"≋";background:#fff;color:#167aa5}
+    .airGood{right:4%;background:#fffffff2;color:#174c34;border:2px solid #2f9b62}
+    .airGood::before{content:"✓";background:#2f9b62;color:#fff}
+    .body{padding:14px}
+    .row{display:flex;justify-content:space-between;gap:8px;align-items:start}
+    .row h3{margin:0;font-size:20px}
+    .price{font-size:21px;font-weight:900;color:var(--green);white-space:nowrap}
+    .over{color:var(--red)}
+    .chips{display:flex;flex-wrap:wrap;gap:5px;margin:9px 0}
+    .chips span{font-size:12px;background:#edf2ef;padding:5px 8px;border-radius:999px}
+    .why{font-size:14px;min-height:62px;line-height:1.5}
+    .take{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:0 14px 14px;border-top:1px solid var(--line);padding-top:11px}
+    .take input{width:19px;height:19px;accent-color:var(--red)}
+    dialog{border:0;border-radius:22px;padding:0;width:min(900px,calc(100% - 22px));height:min(92dvh,900px);max-height:92dvh;overflow:hidden;box-shadow:0 24px 80px #0007}
+    dialog[open]{display:flex;flex-direction:column}
+    html:has(dialog[open]),body:has(dialog[open]){overflow:hidden;overscroll-behavior:none}
+    dialog::backdrop{background:#10231dcc}
+    .mh{background:#fff;padding:16px 18px;border-bottom:1px solid #ddd;flex:0 0 auto}
+    .mt{display:flex;justify-content:space-between;align-items:start;gap:12px}
+    .close{border:0;border-radius:50%;width:40px;height:40px;font-size:24px;cursor:pointer}
+    .mc{padding:16px 18px 24px;overflow-y:auto;min-height:0;flex:1 1 auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
+    .facts div{background:#f2f5f3;border-radius:11px;padding:9px;text-align:center;font-size:12px}
+    .facts b{display:block;font-size:17px}
+    .call{padding:12px;border-radius:12px;margin:9px 0;font-size:14px;line-height:1.5}
+    .good{background:#e9f5ef}.warn{background:#fff0e6}.airbox{background:#eaf8fd}
+    .pdfbox{margin-top:10px;background:#fff;border:1px solid #e5ded3;border-radius:14px;padding:12px}
+    .pdfbox a{font-weight:800;color:var(--green);text-decoration:none}
+    @media(max-width:620px){.facts{grid-template-columns:repeat(2,1fr)}.barin{align-items:flex-start}.airPill{padding:5px 7px}.airPill::before{width:16px;height:16px;font-size:12px}.pri{top:auto;bottom:42px;right:7px;max-width:56%}}
+  </style>
+</head>
+<body>
+  <header><div class="w">
+    <div>מול ירדן · הגרלה 2092 · סדר בחירה חדש</div>
+    <h1>20 הדירות הרלוונטיות</h1>
+    <div class="lead"><b>E39 בעדיפות עליונה.</b> ארבע הפותחות: דירות 3–4 ב־E39 ואז 3–4 ב־E47. אחריהן דירות 5–8 ב־E39, אחר כך 5–8 ב־E47, ולבסוף דירות 7–8 הדרומיות ב־E42, E50, E51 ו־E44. סימון “נתפסה” מוריד אוטומטית לתחתית וצובע באפור.</div>
+  </div></header>
+  <div class="bar"><div class="barin"><b>הטובה ביותר שנותרה: <span id="best"></span></b><button class="reset" type="button" onclick="resetTaken()">איפוס</button></div></div>
+  <main class="grid" id="grid"></main>
+  <dialog id="dlg"><div class="mh"><div class="mt"><div><small id="mr"></small><h2 id="mtitle" style="margin:4px 0"></h2><div class="price" id="mp"></div></div><button class="close" type="button" aria-label="סגירה" onclick="dlg.close()">×</button></div></div><div class="mc" id="mc"></div></dialog>
+  <script>
+    const ASSET_BASE = "https://raw.githubusercontent.com/yehuditamos/mia/7449620c0be3436a06b6fb90956878aff757ddbf/public/mol-hayarden/highres";
+    const RAW = [
+      [1,"E39",3,1,4.5,121.81,33.09,null,2,715895,"E2/1","668bd797e7c042c29c7b34aede17cdac",true],
+      [2,"E39",4,1,4.5,121.81,33.09,null,2,715895,"E2/1","8af28839e23a4095a59f11f1c0c8e3f1",true],
+      [3,"E47",3,1,4.5,121.81,33.09,null,2,715895,"E2/1","460e955ee6554f5e912f84767a96242c",true],
+      [4,"E47",4,1,4.5,121.81,33.09,null,2,715895,"E2/1","24da480b802f4663bf64a09798c0268a",true],
+      [5,"E39",5,2,4.5,121.81,18.98,null,1,684517,"E2/2","06a8aa0c37bd498caf99ce6dcce13858",false],
+      [6,"E39",6,2,4.5,121.81,18.98,null,1,684517,"E2/2","078b352922594f6482d0ebdaabe13cf5",false],
+      [7,"E39",7,3,4.5,121.81,18.98,null,1,684517,"E2/2","81e1e51b5d4f48e6b72c4003838e5203",false],
+      [8,"E39",8,3,4.5,121.81,18.98,null,2,695110,"E2/2","bc34079a107448e0aa991681e007109a",false],
+      [9,"E47",5,2,4.5,121.81,18.98,null,2,695110,"E2/2","fadce0d1454b4da09f930089361cd0a1",false],
+      [10,"E47",6,2,4.5,121.81,18.98,null,1,684517,"E2/2","778d846bbd764d6e93894df7d317aeac",false],
+      [11,"E47",7,3,4.5,121.81,18.98,null,1,684517,"E2/2","3638c0b6f7c141aa85187462dad313b3",false],
+      [12,"E47",8,3,4.5,121.81,18.98,null,2,695110,"E2/2","403b3f759a6e42819b26281abd238c7f",false],
+      [13,"E42",7,2,3,88.91,24.94,null,1,521161,"E19/1","13fe2dfed24f4605830fb9c37aa76b4c",false],
+      [14,"E42",8,2,4,106.93,11.19,5.56,1,606540,"E21/1","a9b703d4e09c45fb85f821809ca36a29",false],
+      [15,"E50",7,2,3,88.91,24.94,null,1,521161,"E19/1","b36774574af347bfa73eede7496d24ec",false],
+      [16,"E50",8,2,4,106.93,11.19,5.56,2,617134,"E21/1","a0ad4821f8174b7cb55e6603527862cb",false],
+      [17,"E51",7,2,3,88.91,24.94,null,1,521161,"E19/1","f00f3199443c48f8a63bd8b50b1d7cde",false],
+      [18,"E51",8,2,4,106.93,11.19,null,2,605354,"E21/1","481b4c2e3c514854bbce4ed1adf4cd2a",false],
+      [19,"E44",7,2,3,88.91,24.94,null,1,521161,"E19/1","c5f33aa5e3ba4fc9af391eb212b874b2",false],
+      [20,"E44",8,2,4,106.93,11.19,5.56,2,617134,"E21/1","c7117e9e4deb49c690e5d5c692903190",false]
+    ];
+    const AIR_ORIGIN = {
+      "E39-3":[500,360],"E39-4":[560,340],"E39-5":[500,333],"E39-6":[583,375],"E39-7":[646,333],"E39-8":[458,323],
+      "E42-7":[365,260],"E42-8":[365,300],"E44-7":[410,280],"E44-8":[630,417],
+      "E47-3":[735,405],"E47-4":[660,345],"E47-5":[646,333],"E47-6":[667,375],"E47-7":[604,375],"E47-8":[625,292],
+      "E50-7":[425,300],"E50-8":[490,344],"E51-7":[360,295],"E51-8":[604,427]
+    };
+    const DATA = RAW.map(([rank,b,apt,floor,rooms,area,outdoor,storage,parking,price,type,pdfId,over]) => {
+      const airCount = (b === "E39" || b === "E47") ? 3 : 2;
+      const preferred = rank <= 4;
+      const southern = !["E39","E47"].includes(b);
+      const key = `${b}-${apt}`;
+      const [airX,airY] = AIR_ORIGIN[key] || [540,350];
+      return {rank,b,apt,floor,rooms,area,outdoor,storage,parking,price,type,over,airCount,airX,airY,key,hero:`${ASSET_BASE}/${b}-apt${apt}-airflow.png`,pdf:`https://www.yigal-group.com/_files/ugd/d42bfc_${pdfId}.pdf`,airDirections:`${airCount} כיווני אוויר`,airExplain:airCount === 3 ? "פתחים בשלוש חזיתות תומכים באוורור צולב ובזרימה יעילה דרך חללי הבית." : "פתחים בשתי חזיתות שונות תומכים בזרימת אוויר בין אזור המגורים לחדרים.",why:preferred ? "מפרט מועדף: 4.5 חדרים, 121.81 מ״ר, 33.09 מ״ר חוץ ושתי חניות." : b === "E39" ? "E39 בעדיפות עליונה: ממשיכים את דירות 5–8 בבניין לפני מעבר ל־E47." : b === "E47" ? "E47 הוא הבניין הבא בסדר העדיפויות, אחרי E39." : `גיבוי מהשורה הדרומית: ${b}, דירה ${apt} — אחת מדירות 7–8 שהוגדרו כרלוונטיות.`,risk:over ? "מחיר ₪715,895 — ₪15,895 מעל תקרת 700K שהוגדרה קודם." : southern ? "לבדוק פיתוח עתידי מדרום ומיקום חניה/מחסן." : "לאמת חזית מדויקת ומה נשאר פנוי ביום הבחירה."};
+    });
+    let taken = new Set(JSON.parse(localStorage.getItem("mh-taken-v3") || "[]"));
+    const money = n => new Intl.NumberFormat("he-IL").format(n);
+    const grid = document.getElementById("grid");
+    const best = document.getElementById("best");
+    const dlg = document.getElementById("dlg");
+
+    function airflowOverlay(x,context="card") {
+      const arrowId = `air-${context}-${x.key}`;
+      const leftX = Math.max(70,x.airX-360), rightX = Math.min(930,x.airX+360), upY = Math.max(70,x.airY-250);
+      const third = x.airCount === 3 ? `<path class="windline" d="M${x.airX} ${x.airY-16} C${x.airX-8} ${x.airY-85} ${x.airX+22} ${upY+70} ${x.airX+55} ${upY}" marker-end="url(#${arrowId})"/>` : "";
+      return `<div class="airflow" aria-hidden="true"><svg viewBox="0 0 1000 562" preserveAspectRatio="none"><defs><marker id="${arrowId}" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#66d8ff"/></marker></defs><path class="windline" d="M${x.airX-15} ${x.airY} C${x.airX-100} ${x.airY-8} ${leftX+95} ${x.airY-70} ${leftX} ${x.airY-115}" marker-end="url(#${arrowId})"/><path class="windline" d="M${x.airX+15} ${x.airY} C${x.airX+105} ${x.airY-5} ${rightX-95} ${x.airY-65} ${rightX} ${x.airY-110}" marker-end="url(#${arrowId})"/>${third}</svg><div class="airPill airCount">${x.airDirections}</div><div class="airPill airGood">זרימת אוויר טובה</div></div>`;
+    }
+    function priorityText(x){return x.b === "E39" ? "E39 · עדיפות עליונה" : x.b === "E47" ? "E47 · עדיפות שנייה" : "דרומית · גיבוי"}
+    function render(){
+      grid.innerHTML="";
+      const available=DATA.filter(x=>!taken.has(x.key));
+      const unavailable=DATA.filter(x=>taken.has(x.key));
+      [...available,...unavailable].forEach((x,i)=>{
+        if(i===available.length&&unavailable.length){const sep=document.createElement("div");sep.className="sep";sep.textContent="נתפסו — הועברו לתחתית";grid.appendChild(sep)}
+        const card=document.createElement("article");
+        card.className=`card ${taken.has(x.key)?"taken":""}`;
+        const eager=x.rank<=4?"eager":"lazy";
+        const fetchPriority=x.rank<=2?"high":"auto";
+        card.innerHTML=`<button class="cardMain" type="button" aria-label="פתיחת פרטי בניין ${x.b}, דירה ${x.apt}"><div class="cover"><img src="${x.hero}" alt="הדמיה של בניין ${x.b}, דירה ${x.apt} מסומנת בכתום" width="1672" height="941" loading="${eager}" fetchpriority="${fetchPriority}" decoding="async">${airflowOverlay(x)}<div class="rank">#${x.rank}</div><div class="pri">${priorityText(x)}</div></div><div class="body"><div class="row"><h3>${x.b} · דירה ${x.apt}</h3><div class="price ${x.over?"over":""}">₪${money(x.price)}</div></div><div class="chips"><span>${x.rooms} חדרים</span><span>קומה ${x.floor}</span><span>${x.area} מ״ר</span><span>${x.parking} חניות</span><span>${x.airDirections}</span></div><div class="why">${x.why}</div></div></button><label class="take"><input type="checkbox" ${taken.has(x.key)?"checked":""}> נתפסה לפני התור שלנו</label>`;
+        card.querySelector(".cardMain").addEventListener("click",()=>openCard(x));
+        card.querySelector("input").addEventListener("change",event=>toggleTaken(x.key,event.target.checked));
+        grid.appendChild(card);
+      });
+      best.textContent=available.length?`#${available[0].rank} ${available[0].b} / דירה ${available[0].apt}`:"כולן סומנו";
+    }
+    function toggleTaken(key,on){on?taken.add(key):taken.delete(key);localStorage.setItem("mh-taken-v3",JSON.stringify([...taken]));render()}
+    function resetTaken(){taken.clear();localStorage.removeItem("mh-taken-v3");render()}
+    function openCard(x){
+      document.getElementById("mr").textContent=`עדיפות #${x.rank}`;
+      document.getElementById("mtitle").textContent=`בניין ${x.b} · דירה ${x.apt}`;
+      document.getElementById("mp").textContent=`₪${money(x.price)}`;
+      document.getElementById("mc").innerHTML=`<div class="heroFrame"><img src="${x.hero}" alt="הדמיה של בניין ${x.b}, דירה ${x.apt} מסומנת בכתום" width="1672" height="941" decoding="async">${airflowOverlay(x,"modal")}</div><div class="facts"><div><b>${x.rooms}</b>חדרים</div><div><b>${x.floor}</b>קומה</div><div><b>${x.area}</b>מ״ר</div><div><b>${x.outdoor}</b>מ״ר חוץ</div><div><b>${x.parking}</b>חניות</div><div><b>${x.storage||"—"}</b>מחסן</div><div><b>${x.type}</b>טיפוס</div><div><b>${x.airDirections}</b>אוורור</div></div><div class="call airbox"><b>זרימת אוויר טובה · ${x.airDirections}</b><br>${x.airExplain}</div><div class="call good"><b>למה היא כאן:</b> ${x.why}</div><div class="call warn"><b>לבדוק:</b> ${x.risk}</div><div class="pdfbox"><a href="${x.pdf}" target="_blank" rel="noopener">פתחי את התשריט הרשמי של הדירה ↗</a></div>`;
+      dlg.showModal();
+    }
+    dlg.addEventListener("click",event=>{if(event.target===dlg)dlg.close()});
+    render();
+  </script>
+</body>
+</html>
