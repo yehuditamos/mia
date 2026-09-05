@@ -29,8 +29,6 @@
     .rank{position:absolute;top:10px;right:10px;background:#fff;color:var(--green);padding:7px 10px;border-radius:999px;font-weight:900;z-index:7;box-shadow:0 3px 12px #0003}
     .pri{position:absolute;right:10px;top:52px;background:#fffffff2;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:800;max-width:52%;z-index:7;box-shadow:0 3px 12px #0002}
     .airflow{position:absolute;inset:0;z-index:4;pointer-events:none}
-    .airflow svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-    .windline{fill:none;stroke:#66d8ff;stroke-width:9;stroke-linecap:round;filter:drop-shadow(0 0 7px #007abf);opacity:.96}
     .airPill{position:absolute;bottom:6%;display:flex;align-items:center;gap:5px;border-radius:999px;padding:6px 9px;font-size:clamp(10px,2.6vw,13px);font-weight:900;line-height:1;box-shadow:0 4px 15px #0005;white-space:nowrap}
     .airPill::before{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:14px;font-weight:900}
     .airCount{left:4%;background:#0f4b67;color:#fff;border:1px solid #9eeaff}
@@ -118,11 +116,8 @@
     const best = document.getElementById("best");
     const dlg = document.getElementById("dlg");
 
-    function airflowOverlay(x,context="card") {
-      const arrowId = `air-${context}-${x.key}`;
-      const leftX = Math.max(70,x.airX-360), rightX = Math.min(930,x.airX+360), upY = Math.max(70,x.airY-250);
-      const third = x.airCount === 3 ? `<path class="windline" d="M${x.airX} ${x.airY-16} C${x.airX-8} ${x.airY-85} ${x.airX+22} ${upY+70} ${x.airX+55} ${upY}" marker-end="url(#${arrowId})"/>` : "";
-      return `<div class="airflow" aria-hidden="true"><svg viewBox="0 0 1000 562" preserveAspectRatio="none"><defs><marker id="${arrowId}" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#66d8ff"/></marker></defs><path class="windline" d="M${x.airX-15} ${x.airY} C${x.airX-100} ${x.airY-8} ${leftX+95} ${x.airY-70} ${leftX} ${x.airY-115}" marker-end="url(#${arrowId})"/><path class="windline" d="M${x.airX+15} ${x.airY} C${x.airX+105} ${x.airY-5} ${rightX-95} ${x.airY-65} ${rightX} ${x.airY-110}" marker-end="url(#${arrowId})"/>${third}</svg><div class="airPill airCount">${x.airDirections}</div><div class="airPill airGood">זרימת אוויר טובה</div></div>`;
+    function airflowOverlay(x) {
+      return `<div class="airflow" aria-hidden="true"><div class="airPill airCount">${x.airDirections}</div><div class="airPill airGood">זרימת אוויר טובה</div></div>`;
     }
     function priorityText(x){return x.b === "E39" ? "E39 · עדיפות עליונה" : x.b === "E47" ? "E47 · עדיפות שנייה" : "דרומית · גיבוי"}
     function render(){
